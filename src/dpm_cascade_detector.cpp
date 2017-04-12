@@ -154,7 +154,7 @@ void DPMDetectorImpl::detect( Mat &image,
     for( size_t classID = 0; classID < detectors.size(); classID++ )
     {
         // detect objects
-        vector< vector<double> > detections;
+        vector< vector<float> > detections;
         detections = detectors[classID]->detect(image);
 
         for (unsigned int i = 0; i < detections.size(); i++)

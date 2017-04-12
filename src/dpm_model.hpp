@@ -85,11 +85,11 @@ class Model
         // component indexed offset (a.k.a. bias) values
         std::vector<float> bias;
         // location/scale weight
-        std::vector< std::vector< double > >  locationWeight;
+        std::vector< std::vector< float > >  locationWeight;
         // idea relative positions for each deformation model
-        std::vector< std::vector< double > >  anchors;
+        std::vector< std::vector< float > >  anchors;
         // array of deformation models
-        std::vector< std::vector< double > > defs;
+        std::vector< std::vector< float > > defs;
 
         // map: pFind[component][part] => part filter index
         std::vector< std::vector<int> > pFind;
@@ -123,7 +123,7 @@ class CascadeModel : public Model
         // number of dimensions used for the PCA projection
         int pcaDim;
         // component indexed arrays of pruning threshold
-        std::vector< std::vector< double > >  prunThreshold;
+        std::vector< std::vector< float > >  prunThreshold;
         // root pca filters
         std::vector< Mat > rootPCAFilters;
         // part PCA filters

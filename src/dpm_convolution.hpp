@@ -61,7 +61,7 @@ class ConvolutionEngine
         ~ConvolutionEngine() {}
 
         // compute convolution value at a fixed location
-        double convolve(const Mat &feat, const Mat &filter,
+        float convolve(const Mat &feat, const Mat &filter,
                 int dimHOG, int x, int y);
 
         // compute convolution of a feature map and multiple filters

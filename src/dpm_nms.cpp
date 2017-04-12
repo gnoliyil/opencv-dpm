@@ -49,7 +49,7 @@ namespace cv
 namespace dpm
 {
 
-void NonMaximumSuppression::sort(const vector< double > x, vector< int > &indices)
+void NonMaximumSuppression::sort(const vector < float > x, vector< int > &indices)
 {
     for (unsigned int i = 0; i < x.size(); i++)
     {
@@ -65,26 +65,26 @@ void NonMaximumSuppression::sort(const vector< double > x, vector< int > &indice
     }
 }
 
-void NonMaximumSuppression::process(vector< vector< double > > &detections, double overlapThreshold)
+void NonMaximumSuppression::process(vector< vector< float > > &detections, double overlapThreshold)
 {
     int numBoxes = (int) detections.size();
 
     if (numBoxes <= 0)
         return;
 
-    vector< double > area(numBoxes);
-    vector< double > score(numBoxes);
+    vector< float > area(numBoxes);
+    vector< float > score(numBoxes);
     vector< int > indices(numBoxes);
 
     for (int i = 0; i < numBoxes; i++)
     {
         indices[i] = i;
         int s = (int)detections[i].size();
-        double x1 = detections[i][0];
-        double y1 = detections[i][1];
-        double x2 = detections[i][2];
-        double y2 = detections[i][3];
-        double sc = detections[i][s-1];
+        float x1 = detections[i][0];
+        float y1 = detections[i][1];
+        float x2 = detections[i][2];
+        float y2 = detections[i][3];
+        float sc = detections[i][s-1];
         score[i] = sc;
         area[i] = (x2 - x1 + 1) * ( y2 - y1 + 1);
     }
@@ -105,18 +105,18 @@ void NonMaximumSuppression::process(vector< vector< double > > &detections, doub
         for (int k = 0; k <= last - 1; k++)
         {
             int j = indices[k];
-            double xx1 = max(detections[i][0], detections[j][0]);
-            double yy1 = max(detections[i][1], detections[j][1]);
-            double xx2 = min(detections[i][2], detections[j][2]);
-            double yy2 = min(detections[i][3], detections[j][3]);
+            float xx1 = max(detections[i][0], detections[j][0]);
+            float yy1 = max(detections[i][1], detections[j][1]);
+            float xx2 = min(detections[i][2], detections[j][2]);
+            float yy2 = min(detections[i][3], detections[j][3]);
 
-            double w = xx2 - xx1 + 1;
-            double h = yy2 - yy1 + 1;
+            float w = xx2 - xx1 + 1;
+            float h = yy2 - yy1 + 1;
 
             if (w > 0 && h > 0)
             {
                 // compute overlap
-                double o = w*h / area[j];
+            	float o = w*h / area[j];
                 if (o > overlapThreshold)
                     suppress.push_back(k);
             }
@@ -142,7 +142,7 @@ void NonMaximumSuppression::process(vector< vector< double > > &detections, doub
         indices = newIndices;
     } // while
 
-    vector< vector< double > > newDetections(pick.size());
+    vector< vector< float > > newDetections(pick.size());
     for (unsigned int i = 0; i < pick.size(); i++)
         newDetections[i] = detections[pick[i]];
 

@@ -99,8 +99,8 @@ int main( int argc, char** argv )
     };
 
     CommandLineParser parser(argc, argv, keys);
-    string model_path(parser.get<string>(0));
-    string image_dir(parser.get<string>(1));
+    string model_path(argv[1]);
+    string image_dir(argv[2]);
     string image_list = image_dir + "/files.txt";
 
     if( model_path.empty() || image_dir.empty() )

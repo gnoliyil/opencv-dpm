@@ -45,14 +45,14 @@ namespace cv
 {
 namespace dpm
 {
-double ConvolutionEngine::convolve(const Mat &feat, const Mat &filter,
+float ConvolutionEngine::convolve(const Mat &feat, const Mat &filter,
         int dimHOG, int x, int y)
 {
-    double val = 0;
+	float val = 0;
     for (int yp = 0; yp < filter.rows; yp++)
     {
-        const double *pfeat = (double*)feat.ptr(y + yp) + x * dimHOG;
-        const double *pfilter = (double*)filter.ptr(yp);
+        const float *pfeat = (float*)feat.ptr(y + yp) + x * dimHOG;
+        const float *pfilter = (float*)filter.ptr(yp);
 
         for (int xp = 0; xp < filter.cols; xp++)
         {
@@ -68,18 +68,20 @@ void ConvolutionEngine::convolve(const Mat &feat, const Mat &filter,
 {
     for (int y = 0; y < result.rows; y++)
     {
-        double *presult = (double*)result.ptr(y);
+    	float *presult = (float*)result.ptr(y);
         for (int x = 0; x < result.cols; x++)
         {
-            double val = 0;
+        	float val = 0;
             for (int yp = 0; yp < filter.rows; yp++)
             {
-                const double *pfeat = (double*)feat.ptr(y + yp) + x * dimHOG;
-                const double *pfilter = (double*)filter.ptr(yp);
+                const float *pfeat = (float*)feat.ptr(y + yp) + x * dimHOG;
+                const float *pfilter = (float*)filter.ptr(yp);
 
                 for (int xp = 0; xp < filter.cols; xp++)
                 {
                     val += pfeat[xp] * pfilter[xp];
+
+                    //printf("pfeat = %.15f, pfilter = %.6f\n", pfeat[xp], pfilter[xp]);
                 }
             } // yp
 

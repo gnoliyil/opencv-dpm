@@ -66,11 +66,11 @@ class DPMCascade
         // pyramid level offset for distance transform
         std::vector< int > dtLevelOffset;
         // convolution values
-        std::vector< double > convValues;
-        std::vector< double > pcaConvValues;
+        std::vector< float > convValues;
+        std::vector< float > pcaConvValues;
         // distance transform values
-        std::vector< double > dtValues;
-        std::vector< double > pcaDtValues;
+        std::vector< float > dtValues;
+        std::vector< float > pcaDtValues;
         // distance transform argmax, x dimension
         std::vector< int > dtArgmaxX;
         std::vector< int > pcaDtArgmaxX;
@@ -82,8 +82,8 @@ class DPMCascade
         // the amount of temporary storage of cascade
         int tempStorageSize;
         // precomputed deformation costs
-        std::vector< std::vector< double > > defCostCacheX;
-        std::vector< std::vector< double > > defCostCacheY;
+        std::vector< std::vector< float > > defCostCacheX;
+        std::vector< std::vector< float > > defCostCacheY;
         // DPM cascade model
         CascadeModel model;
         // feature process
@@ -113,19 +113,19 @@ class DPMCascade
         void computeRootPCAScores(std::vector< std::vector< Mat > > &rootScores);
 
         // lookup or compute the score of a part at a location
-        double computePartScore(int plevel, int pId, int px, int py, bool isPCA, double defThreshold);
+        float computePartScore(int plevel, int pId, int px, int py, bool isPCA, float defThreshold);
 
         // compute location scores
-        void computeLocationScores(std::vector< std::vector< double > > &locctionScores);
+        void computeLocationScores(std::vector< std::vector< float > > &locctionScores);
 
         // initialization pre-allocate storage
         void initDPMCascade();
 
         // cascade process
-        void process(std::vector< std::vector<double> > &detections);
+        void process(std::vector< std::vector<float> > &detections);
 
         // detect object from image
-        std::vector< std::vector<double> > detect(Mat &image);
+        std::vector< std::vector<float> > detect(Mat &image);
 };
 
 #ifdef HAVE_TBB

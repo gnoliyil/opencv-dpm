@@ -57,9 +57,9 @@ class NonMaximumSuppression
         NonMaximumSuppression() {}
         ~NonMaximumSuppression() {}
 
-        void sort(const std::vector< double > x, std::vector< int > &indices);
+        void sort(const std::vector< float > x, std::vector< int > &indices);
 
-        void process(std::vector< std::vector< double > > &detections, double overlapThreshold);
+        void process(std::vector< std::vector< float > > &detections, double overlapThreshold);
 };
 } // dpm
 } // cv

@@ -92,10 +92,10 @@ void DPMCascade::initDPMCascade()
     dtValues.resize(tempStorageSize);
     pcaDtValues.resize(tempStorageSize);
 
-    fill(convValues.begin(), convValues.end(), -numeric_limits<double>::infinity());
-    fill(pcaConvValues.begin(), pcaConvValues.end(), -numeric_limits<double>::infinity());
-    fill(dtValues.begin(), dtValues.end(), -numeric_limits<double>::infinity());
-    fill(pcaDtValues.begin(), pcaDtValues.end(), -numeric_limits<double>::infinity());
+    fill(convValues.begin(), convValues.end(), -numeric_limits<float>::infinity());
+    fill(pcaConvValues.begin(), pcaConvValues.end(), -numeric_limits<float>::infinity());
+    fill(dtValues.begin(), dtValues.end(), -numeric_limits<float>::infinity());
+    fill(pcaDtValues.begin(), pcaDtValues.end(), -numeric_limits<float>::infinity());
 
     // each pyramid (convolution and distance transform) is stored
     // in a 1D array. Since pyramid levels have different sizes,
@@ -119,7 +119,7 @@ void DPMCascade::initDPMCascade()
 
     for (int i = 0; i < numDefParams; i++)
     {
-        vector< double > def = model.defs[i];
+        vector< float > def = model.defs[i];
         CV_Assert((int) def.size() >= 4);
 
         defCostCacheX[i].resize(2*halfWindowSize + 1);
@@ -140,13 +140,13 @@ void DPMCascade::initDPMCascade()
     pcaDtArgmaxY.resize(dtLevelOffset[nlevels]);
 }
 
-vector< vector<double> > DPMCascade::detect(Mat &image)
+vector< vector<float> > DPMCascade::detect(Mat &image)
 {
     if (image.channels() == 1)
         cvtColor(image, image, COLOR_GRAY2BGR);
 
-    if (image.depth() != CV_64F)
-        image.convertTo(image, CV_64FC3);
+    if (image.depth() != CV_32F)
+        image.convertTo(image, CV_32FC3);
 
     // compute features
     computeFeatures(image);
@@ -155,7 +155,7 @@ vector< vector<double> > DPMCascade::detect(Mat &image)
     initDPMCascade();
 
     // cascade process
-    vector< vector<double> > detections;
+    vector< vector<float> > detections;
     process(detections);
 
     // non-maximum suppression
@@ -183,9 +183,9 @@ void DPMCascade::computeFeatures(const Mat &im)
     feature.projectFeaturePyramid(model.pcaCoeff, pyramid, pcaPyramid);
 }
 
-void DPMCascade::computeLocationScores(vector< vector< double > >  &locationScores)
+void DPMCascade::computeLocationScores(vector< vector< float > >  &locationScores)
 {
-    vector< vector < double > > locationWeight = model.locationWeight;
+    vector< vector < float > > locationWeight = model.locationWeight;
     CV_Assert((int)locationWeight.size() == model.numComponents);
 
     Mat locationFeature;
@@ -200,10 +200,10 @@ void DPMCascade::computeLocationScores(vector< vector< double > >  &locationScor
 
         for (int level = 0; level < locationFeature.cols; level++)
         {
-            double val = 0;
+            float val = 0;
             for (int k = 0; k < locationFeature.rows; k++)
                 val += locationWeight[comp][k]*
-                    locationFeature.at<double>(k, level);
+                    locationFeature.at<float>(k, level);
 
             locationScores[comp][level] = val;
         }
@@ -241,7 +241,7 @@ void DPMCascade::computeRootPCAScores(vector< vector< Mat > > &rootScores)
                 CV_Error(CV_StsBadArg,
                         "Invalid input, filter size should be smaller than feature size.");
 
-            Mat result = Mat::zeros(Size(width, height), CV_64F);
+            Mat result = Mat::zeros(Size(width, height), CV_32F);
             convolutionEngine.convolve(feat, filter, model.pcaDim, result);
             rootScores[comp][level] = result;
         }
@@ -272,7 +272,7 @@ void ParalComputeRootPCAScores::operator() (const Range &range) const
         int height = feat.rows - filter.rows + 1;
         int width = (feat.cols - filter.cols) / pcaDim + 1;
 
-        Mat result = Mat::zeros(Size(width, height), CV_64F);
+        Mat result = Mat::zeros(Size(width, height), CV_32F);
         // convolution engine
         ConvolutionEngine convEngine;
         convEngine.convolve(feat, filter, pcaDim, result);
@@ -281,24 +281,24 @@ void ParalComputeRootPCAScores::operator() (const Range &range) const
 }
 #endif
 
-void DPMCascade::process( vector< vector<double> > &dets)
+void DPMCascade::process( vector< vector<float> > &dets)
 {
     PyramidParameter params = feature.getPyramidParameters();
     int interval = params.interval;
     int padx = params.padx;
     int pady = params.pady;
-    vector<double> scales = params.scales;
+    vector<float> scales = params.scales;
 
     int nlevels = (int)pyramid.size() - interval;
     CV_Assert(nlevels > 0);
 
     // keep track of the PCA scores for each PCA filter
-    vector< vector< double > > pcaScore(model.numComponents);
+    vector< vector< float > > pcaScore(model.numComponents);
     for (int comp = 0; comp < model.numComponents; comp++)
         pcaScore[comp].resize(model.numParts[comp]+1);
 
     // compute location scores
-    vector< vector< double > > locationScores;
+    vector< vector< float > > locationScores;
     computeLocationScores(locationScores);
 
     // compute root PCA scores
@@ -312,7 +312,7 @@ void DPMCascade::process( vector< vector<double> > &dets)
         {
             // root filter pyramid level
             int rlevel = plevel + interval;
-            double bias = model.bias[comp] + locationScores[comp][rlevel];
+            float bias = model.bias[comp] + locationScores[comp][rlevel];
             // get the scores of the first PCA filter
             Mat rtscore = rootPCAScores[comp][rlevel];
             // process each location in the current pyramid level
@@ -321,7 +321,7 @@ void DPMCascade::process( vector< vector<double> > &dets)
                 for (int ry = (int)ceil(pady/2.0); ry < rtscore.rows - (int)ceil(pady/2.0); ry++)
                 {
                     // get stage 0 score
-                    double score = rtscore.at<double>(ry, rx) + bias;
+                    float score = rtscore.at<float>(ry, rx) + bias;
                     // record PCA score
                     pcaScore[comp][0] = score - bias;
                     // cascade stage 1 through 2*numparts + 2
@@ -329,7 +329,7 @@ void DPMCascade::process( vector< vector<double> > &dets)
                     int numstages = 2*model.numParts[comp] + 2;
                     for(; stage < numstages; stage++)
                     {
-                        double t = model.prunThreshold[comp][2*stage-1];
+                        float t = model.prunThreshold[comp][2*stage-1];
                         // check for hypothesis pruning
                         if (score < t)
                             break;
@@ -345,7 +345,7 @@ void DPMCascade::process( vector< vector<double> > &dets)
                         {
                             // calculate the root non-pca score
                             // and replace the PCA score
-                            double rscore = 0.0;
+                            float rscore = 0.0;
                             if (isPCA)
                             {
                                 rscore = convolutionEngine.convolve(pcaPyramid[rlevel],
@@ -368,7 +368,7 @@ void DPMCascade::process( vector< vector<double> > &dets)
                             int py = 2*ry + (int)model.anchors[pId][1];
 
                             // look up the filter and deformation model
-                            double defThreshold =
+                            float defThreshold =
                                 model.prunThreshold[comp][2*stage] - score;
 
                             double ps = computePartScore(plevel, pId, px, py,
@@ -395,13 +395,13 @@ void DPMCascade::process( vector< vector<double> > &dets)
                     // final score over the global threshold
                     if (stage == numstages && score >= model.scoreThresh)
                     {
-                        vector<double> coords;
+                        vector<float> coords;
                         // compute and record image coordinates of the detection window
-                        double scale = model.sBin/scales[rlevel];
-                        double x1 = (rx-padx)*scale;
-                        double y1 = (ry-pady)*scale;
-                        double x2 = x1 + model.rootFilterDims[comp].width*scale - 1;
-                        double y2 = y1 + model.rootFilterDims[comp].height*scale - 1;
+                        float scale = model.sBin/scales[rlevel];
+                        float x1 = (rx-padx)*scale;
+                        float y1 = (ry-pady)*scale;
+                        float x2 = x1 + model.rootFilterDims[comp].width*scale - 1;
+                        float y2 = y1 + model.rootFilterDims[comp].height*scale - 1;
 
                         coords.push_back(x1);
                         coords.push_back(y1);
@@ -444,7 +444,7 @@ void DPMCascade::process( vector< vector<double> > &dets)
     } // for each component
 }
 
-double DPMCascade::computePartScore(int plevel, int pId, int px, int py, bool isPCA, double defThreshold)
+float DPMCascade::computePartScore(int plevel, int pId, int px, int py, bool isPCA, float defThreshold)
 {
     // remove virtual padding
     PyramidParameter params = feature.getPyramidParameters();
@@ -458,14 +458,14 @@ double DPMCascade::computePartScore(int plevel, int pId, int px, int py, bool is
         + px;
     int dtBaseOffset = levelOffset + locationOffset;
 
-    double val;
+    float val;
 
     if (isPCA)
         val = pcaDtValues[dtBaseOffset];
     else
         val = dtValues[dtBaseOffset];
 
-    if (val > -numeric_limits<double>::infinity())
+    if (val > -numeric_limits<float>::infinity())
         return val;
 
     // Nope, define the bounds of the convolution and
@@ -505,14 +505,14 @@ double DPMCascade::computePartScore(int plevel, int pId, int px, int py, bool is
             // skip if already computed
             if (isPCA)
             {
-                if (pcaConvValues[loc] > -numeric_limits<double>::infinity())
+                if (pcaConvValues[loc] > -numeric_limits<float>::infinity())
                     continue;
             }
-            else if(convValues[loc] > -numeric_limits<double>::infinity())
+            else if(convValues[loc] > -numeric_limits<float>::infinity())
                 continue;
 
             // check for deformation pruning
-            double defCost = defCostCacheX[pId][px - x + halfWindowSize]
+            float defCost = defCostCacheX[pId][px - x + halfWindowSize]
                 + defCostCacheY[pId][py - y + halfWindowSize];
 
             if (defCost < defThreshold)
@@ -536,7 +536,7 @@ double DPMCascade::computePartScore(int plevel, int pId, int px, int py, bool is
     // do distance transform over the region.
     // the region is small enought that brut force DT
     // is the fastest method
-    double max = -numeric_limits<double>::infinity();
+    float max = -numeric_limits<float>::infinity();
     int xargmax = 0;
     int yargmax = 0;
 
@@ -546,7 +546,7 @@ double DPMCascade::computePartScore(int plevel, int pId, int px, int py, bool is
         for (int x = xstart; x <= xend; x++)
         {
             loc++;
-            double v;
+            float v;
 
             if (isPCA)
                 v = pcaConvValues[loc];

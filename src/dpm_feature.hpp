@@ -66,11 +66,11 @@ class PyramidParameter
         // vertical padding (in cells)
         int pady;
         // scale factor
-        double sfactor;
+        float sfactor;
         // maximum number of scales in the pyramid
         int maxScale;
         // scale of each level
-        std::vector< double > scales;
+        std::vector< float > scales;
 
     public:
         PyramidParameter()
