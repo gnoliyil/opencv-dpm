@@ -169,6 +169,8 @@ void drawBoxes(Mat &frame, \
     for (unsigned int i = 0; i < ds.size(); i++)
     {
         rectangle(frame, ds[i].rect, color, 2);
+        putText(frame, format("%0.4f", ds[i].score), Point(ds[i].rect.x, ds[i].rect.y),
+        		FONT_HERSHEY_PLAIN, 0.7, Scalar(0, 0, 0), 1);
     }
 
     // draw text on image
