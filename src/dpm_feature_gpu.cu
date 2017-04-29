@@ -248,8 +248,10 @@ void FeatureGPU::initialize(const FeatureGPUParams params)
 
 void FeatureGPU::loadImage(const Mat &image)
 {
+    if (image.size() != origSize)
+        CV_Error(CV_StsBadSize, "Error loaded image size!");
     origImage.upload(image);
-    origSize = Size(origImage.cols, origImage.rows); 
+    // origSize = Size(origImage.cols, origImage.rows); 
 
     resetMats(); 
     createPyramid(); 
@@ -257,8 +259,10 @@ void FeatureGPU::loadImage(const Mat &image)
 
 void FeatureGPU::loadImage(const gpu::GpuMat &image)
 {
+    if (image.size() != origSize)
+        CV_Error(CV_StsBadSize, "Error loaded image size!");
     origImage = image;
-    origSize = Size(origImage.cols, origImage.rows); 
+    // origSize = Size(origImage.cols, origImage.rows); 
 
     resetMats(); 
     createPyramid(); 
