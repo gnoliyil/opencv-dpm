@@ -124,7 +124,7 @@ int main( int argc, char** argv )
 #endif
 
     cv::Ptr<DPMDetector> detector = \
-    DPMDetector::create(vector<string>(1, model_path));
+    DPMDetector::create(cv::Size(320, 240), vector<string>(1, model_path));
 
     // namedWindow("DPM Cascade Detection", 1);
     // the color of the rectangle

@@ -139,7 +139,7 @@ public:
     constructed from the name of file containing the model. E.g. the model stored in
     "/home/user/cat.xml" will get the name "cat".
      */
-    static cv::Ptr<DPMDetector> create(std::vector<std::string> const &filenames,
+    static cv::Ptr<DPMDetector> create(const cv::Size &imgSize, std::vector<std::string> const &filenames,
             std::vector<std::string> const &classNames = std::vector<std::string>());
 
     virtual ~DPMDetector(){}

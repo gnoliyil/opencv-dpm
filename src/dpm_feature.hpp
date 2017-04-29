@@ -117,6 +117,9 @@ class Feature
 
         // destrcutor
         ~Feature () {}
+        
+        // compute the params and param.scales since it is not compelely replaced by FeatureGPU
+        void computeScales(const Mat &imageM);
 
         // compute feature pyramid
         void computeFeaturePyramid(const Mat &imageM, std::vector< Mat > &pyramid);

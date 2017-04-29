@@ -53,7 +53,7 @@ class DPMDetectorImpl : public DPMDetector
 {
 public:
 
-    DPMDetectorImpl( const vector<string>& filenames, const vector<string>& classNames=vector<string>() );
+    DPMDetectorImpl( const Size& size, const vector<string>& filenames, const vector<string>& classNames=vector<string>() );
     ~DPMDetectorImpl();
 
     bool isEmpty() const;
@@ -69,10 +69,11 @@ private:
     vector<string> classNames;
 };
 
-Ptr<DPMDetector> DPMDetector::create(vector<string> const &filenames,
+Ptr<DPMDetector> DPMDetector::create(const Size &size, 
+                                     vector<string> const &filenames,
                                      vector<string> const &classNames)
 {
-    return makePtr<DPMDetectorImpl>(filenames, classNames);
+    return makePtr<DPMDetectorImpl>(size, filenames, classNames);
 }
 
 DPMDetectorImpl::ObjectDetection::ObjectDetection()
@@ -82,7 +83,9 @@ DPMDetectorImpl::ObjectDetection::ObjectDetection( const Rect& _rect, float _sco
     : rect(_rect), score(_score), classID(_classID) {}
 
 
-DPMDetectorImpl::DPMDetectorImpl( const vector<string>& filenames,
+DPMDetectorImpl::DPMDetectorImpl( 
+        const Size &size,
+        const vector<string>& filenames,
         const vector<string>& _classNames )
 {
     for( size_t i = 0; i < filenames.size(); i++ )
@@ -91,9 +94,9 @@ DPMDetectorImpl::DPMDetectorImpl( const vector<string>& filenames,
         if( filename.length() < 5 || filename.substr(filename.length()-4, 4) != ".xml" )
             continue;
 
-        Ptr<DPMCascade> detector = makePtr<DPMCascade>();
+        Ptr<DPMCascade> detector = makePtr<DPMCascade>(size);
 
-        // initialization
+        // initialization, load parameters of Feature and FeatureGPU
         detector->loadCascadeModel( filename.c_str() );
 
         if( detector )

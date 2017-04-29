@@ -44,6 +44,7 @@
 
 #include "dpm_model.hpp"
 #include "dpm_feature.hpp"
+#include "dpm_feature_gpu.hpp"
 #include "dpm_convolution.hpp"
 
 #include "opencv2/imgproc.hpp"
@@ -87,6 +88,7 @@ class DPMCascade
         // DPM cascade model
         CascadeModel model;
         // feature process
+        FeatureGPU fg;
         Feature feature;
         // feature pyramid
         std::vector< Mat > pyramid;
@@ -99,11 +101,18 @@ class DPMCascade
 
     public:
         // constructor
-        DPMCascade () {}
+        DPMCascade ():
+            fg(Size(320, 240))
+            {}
+
+        DPMCascade (const Size &s):
+            fg(s)
+            {}
+
         // destructor
         virtual ~DPMCascade () {}
 
-        // load cascade mode and initialize cascade
+        // load cascade mode, initialize cascade, Feature and FeatureGPU
         void loadCascadeModel(const std::string &modelPath);
 
         // compute feature pyramid and projected feature pyramid

@@ -56,6 +56,36 @@ Feature::Feature (PyramidParameter p):params(p)
 {
 }
 
+void Feature::computeScales(const Mat &imageM)
+{
+    params.sfactor = pow(2.0, 1.0/params.interval);
+    const Size_<double> imSize = imageM.size();
+    params.maxScale = 1 + (int)floor(log(min(imSize.width, imSize.height)/
+                (float)(params.binSize*5.0))/log(params.sfactor));
+    
+    if (params.maxScale < params.interval)
+    {
+        CV_Error(CV_StsBadArg, "The image is too small to create a pyramid");
+        return;
+    }
+
+    params.scales.resize(params.maxScale + params.interval);
+
+    for (int i = 0; i < params.interval; i++)
+    {
+        const double scale = (double)(1.0f/pow(params.sfactor, i)); // cannot modify !
+        params.scales[i] = 2*scale;
+
+        params.scales[i+params.interval] = scale;
+        
+        // Remaining octaves
+        for ( int j = i + params.interval; j < params.maxScale; j += params.interval)
+        {
+            params.scales[j+params.interval] = params.scales[j]*0.5;
+        }
+    }
+}
+
 void Feature::computeFeaturePyramid(const Mat &imageM, vector< Mat > &pyramid)
 {
 #ifdef HAVE_TBB
