@@ -66,6 +66,22 @@ void DPMCascade::loadCascadeModel(const string &modelPath)
     }
 
     model.initModel();
+
+    FeatureGPUParams paramsG;
+    paramsG.pad_x = model.maxSizeX;
+    paramsG.pad_y = model.maxSizeY;
+    paramsG.interval = model.interval;
+    paramsG.sbin = model.sBin;
+
+    fg.initialize(paramsG); 
+
+    PyramidParameter paramsC;
+    paramsC.padx = model.maxSizeX;
+    paramsC.pady = model.maxSizeY;
+    paramsC.interval = model.interval;
+    paramsC.binSize = model.sBin;
+
+    feature = Feature(paramsC);
 }
 
 void DPMCascade::initDPMCascade()
@@ -167,17 +183,14 @@ vector< vector<float> > DPMCascade::detect(Mat &image)
 
 void DPMCascade::computeFeatures(const Mat &im)
 {
-    // initialize feature pyramid
-    PyramidParameter params;
-    params.padx = model.maxSizeX;
-    params.pady = model.maxSizeY;
-    params.interval = model.interval;
-    params.binSize = model.sBin;
+    feature.computeScales(im); 
 
-    feature = Feature(params);
+    fg.loadImage(im); 
 
     // compute pyramid
-    feature.computeFeaturePyramid(im, pyramid);
+    fg.computeHistPyramid(); 
+    
+    fg.downloadFeature(pyramid);
 
     // compute projected pyramid
     feature.projectFeaturePyramid(model.pcaCoeff, pyramid, pcaPyramid);
