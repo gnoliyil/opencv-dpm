@@ -11,11 +11,12 @@ else
 endif
 
 ifeq ($(OMP),1)
-    COMMON_FLAGS += -fopenmp
+    NVCCFLAGS += -Xcompiler -fopenmp
+    CXXFLAGS += -fopenmp
 endif
 
-CXXFLAGS= $(COMMON_FLAGS) -static -ffast-math -march=native
-NVCCFLAGS = $(COMMON_FLAGS) --use_fast_math
+CXXFLAGS += $(COMMON_FLAGS) -static -ffast-math -march=native
+NVCCFLAGS += $(COMMON_FLAGS) --use_fast_math
 
 all: clean libdpm.a
 
