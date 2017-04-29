@@ -237,27 +237,13 @@ __global__ void computeHOG32DFeat
 FeatureGPU::FeatureGPU(const Size &size)
 {
     origSize = size; 
-
-    computeScale(); 
-    initMats(); 
 }
 
-FeatureGPU::FeatureGPU(const Mat &image)
-{   
-    origSize = Size(image.cols, image.rows);
-
-    computeScale(); 
-    initMats(); 
-    loadImage(image);
-}
-
-FeatureGPU::FeatureGPU(const gpu::GpuMat &image)
+void FeatureGPU::initialize(const FeatureGPUParams params) 
 {
-    origSize = Size(image.cols, image.rows);
-
+    setParams(params); 
     computeScale(); 
     initMats(); 
-    loadImage(image);
 }
 
 void FeatureGPU::loadImage(const Mat &image)

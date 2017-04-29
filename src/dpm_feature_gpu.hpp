@@ -98,8 +98,10 @@ class FeatureGPU
 
         // constructors of the Feature GPU calculator class
 	FeatureGPU(const Size &size);
-	FeatureGPU(const Mat &image);
-	FeatureGPU(const gpu::GpuMat &image);
+	// FeatureGPU(const Mat &image);
+	// FeatureGPU(const gpu::GpuMat &image);
+
+        void initialize(const FeatureGPUParams params = FeatureGPUParams()); 
 
         // load a new image to Mat & image, we need to create new Hist, Norm and Feat matrices. 
         void loadImage(const Mat &image); 
