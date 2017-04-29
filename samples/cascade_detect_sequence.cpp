@@ -158,8 +158,7 @@ int main( int argc, char** argv )
 
         // if ( waitKey(30) >= 0)
         //     break;
-        if (i % 10 == 0)
-            printf("frame %d processed\n", i);
+        printf("frame rate = %0.2f\n", 1.0/t);
         char filename[25]; 
         sprintf(filename, "out/frame%04d.jpg", i); 
         imwrite(filename, frame); 
