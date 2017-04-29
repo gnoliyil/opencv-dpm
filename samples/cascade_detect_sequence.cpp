@@ -124,9 +124,9 @@ int main( int argc, char** argv )
 #endif
 
     cv::Ptr<DPMDetector> detector = \
-    DPMDetector::create(vector<string>(1, model_path));
+    DPMDetector::create(cv::Size(320, 240), vector<string>(1, model_path));
 
-    namedWindow("DPM Cascade Detection", 1);
+    // namedWindow("DPM Cascade Detection", 1);
     // the color of the rectangle
     Scalar color(0, 255, 255); // yellow
     Mat frame;
@@ -154,10 +154,15 @@ int main( int argc, char** argv )
         drawBoxes(frame, ds, color, text);
 
         // show detections
-        imshow("DPM Cascade Detection", frame);
+        // imshow("DPM Cascade Detection", frame);
 
-        if ( waitKey(30) >= 0)
-            break;
+        // if ( waitKey(30) >= 0)
+        //     break;
+        if (i % 10 == 0)
+            printf("frame %d processed\n", i);
+        char filename[25]; 
+        sprintf(filename, "out/frame%04d.jpg", i); 
+        imwrite(filename, frame); 
     }
 
     return 0;
