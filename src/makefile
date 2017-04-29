@@ -1,14 +1,33 @@
-all: libdpm.a
+COMMON_FLAGS=--std=c++11 `pkg-config --cflags --libs opencv` -I../include -lm 
+
+ifeq ($(PROFILE),1)
+    COMMON_FLAGS += -pg
+endif
+
+ifeq ($(DEBUG),1)
+    COMMON_FLAGS += -g
+else
+    COMMON_FLAGS += -O3 
+endif
+
+ifeq ($(OMP),1)
+    COMMON_FLAGS += -fopenmp
+endif
+
+CXXFLAGS= $(COMMON_FLAGS) -static -ffast-math -march=native
+NVCCFLAGS = $(COMMON_FLAGS) --use_fast_math
+
+all: clean libdpm.a
 
 clean: 
-	rm *.o *.a
+	rm -f *.o *.a
 
 libdpm.a: dpm_model.cpp.o dpm_feature.cpp.o dpm_cascade.cpp.o dpm_cascade_detector.cpp.o \
           dpm_convolution.cpp.o dpm_nms.cpp.o dpm_feature_gpu.cu.o 
 	ar rvs $@ *.o
 	
 %.cu.o: %.cu
-	nvcc -c $< -o $@ --std=c++11 `pkg-config --cflags --libs opencv` -I../include -lm -O3 --use_fast_math 
+	nvcc -c $< -o $@ $(NVCCFLAGS) 
 
 %.cpp.o: %.cpp
-	g++ -c $< -o $@ --std=c++11 `pkg-config --cflags --libs opencv` -I../include -lm -O3 -static -ffast-math -march=native
+	g++ -c $< -o $@ $(CXXFLAGS)
