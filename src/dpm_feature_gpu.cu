@@ -5,7 +5,6 @@
 
 #include <cuda_runtime.h>
 #include <device_functions.hpp>
-#define LOCATE_SHARED(I,J,sbin) (((I) + 1) * ((sbin) + 2) + (J) + 1)
 
 namespace cv
 {
@@ -41,33 +40,12 @@ __global__ void computeHOG32DHist
     const int vW = bW * sbin;
     const int vH = bH * sbin;
 
-    // DONE: copy data to shared memory
-    
-    __shared__ float3 shared_points[100]; 
+    // TODO: copy data to shared memory
+    const float3* sLast = y >= 1 ? (float3*)(imageM.ptr(y - 1) + MIN(x, imageM.cols - 2)) : NULL;
     const float3* s = (float3*)(imageM.ptr(y) + MIN(x, imageM.cols - 2));
-
-    if (pixel_r == 0 && y > 0) {
-        const float3* sLast = y >= 1 ? (float3*)(imageM.ptr(y - 1) + MIN(x, imageM.cols - 2)) : NULL;
-        shared_points[LOCATE_SHARED(pixel_r - 1, pixel_c, sbin)] = *sLast;
-    }
-    if (pixel_r == sbin - 1 && y < vH - 1) {
-        const float3* sNext = y < vH - 1 ? (float3*)(imageM.ptr(y + 1) + MIN(x, imageM.cols - 2)) : NULL;
-        shared_points[LOCATE_SHARED(pixel_r + 1, pixel_c, sbin)] = *sNext; 
-    }
-    if (pixel_c == 0 && x > 0)
-        shared_points[LOCATE_SHARED(pixel_r, pixel_c - 1, sbin)] = *(s-1); 
-    if (pixel_c == sbin - 1 && x < vH - 1)
-        shared_points[LOCATE_SHARED(pixel_r, pixel_c + 1, sbin)] = *(s+1); 
-    shared_points[LOCATE_SHARED(pixel_r, pixel_c, sbin)] = *s; 
+    const float3* sNext = y < vH - 1 ? (float3*)(imageM.ptr(y + 1) + MIN(x, imageM.cols - 2)) : NULL;
+    const size_t imStride = imageM.ptr(1) - imageM.ptr(0);
     
-    __syncthreads(); 
-
-    const float3* sharedLast = shared_points + LOCATE_SHARED(pixel_r - 1, pixel_c, sbin);  
-    // const float3* sharedThis = shared_points + LOCATE_SHARED(pixel_r    , pixel_c, sbin); 
-    const float3* sharedNext = shared_points + LOCATE_SHARED(pixel_r + 1, pixel_c, sbin);  
-    const float3* sharedLeft = shared_points + LOCATE_SHARED(pixel_r, pixel_c - 1, sbin);  
-    const float3* sharedRight= shared_points + LOCATE_SHARED(pixel_r, pixel_c + 1, sbin);  
-
     float dyb, dxb, vb;
     float dyg, dxg, vg;
     float dyr, dxr, vr;
@@ -78,18 +56,18 @@ __global__ void computeHOG32DHist
     else
     {
         // blue image channel ;
-        dyb = (sharedNext)->x - (sharedLast)->x;
-        dxb = (sharedRight)->x - (sharedLeft)->x;
+        dyb = (sNext)->x - (sLast)->x;
+        dxb = (s+1)->x - (s-1)->x;
         vb = dxb*dxb + dyb*dyb;
 
         // green image channel
-        dyg = (sharedNext)->y - (sharedLast)->y;
-        dxg = (sharedRight)->y - (sharedLeft)->y;
+        dyg = (sNext)->y - (sLast)->y;
+        dxg = (s+1)->y - (s-1)->y;
         vg = dxg*dxg + dyg*dyg;
 
         // red image channel
-        dyr = (sharedNext)->z - (sharedLast)->z;
-        dxr = (sharedRight)->z - (sharedLeft)->z;
+        dyr = (sNext)->z - (sLast)->z;
+        dxr = (s+1)->z - (s-1)->z;
         vr = dxr*dxr + dyr*dyr;
 
         // pick the channel with the strongest gradient
