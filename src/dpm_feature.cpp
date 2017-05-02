@@ -283,7 +283,7 @@ void Feature::computeHOG32D(const Mat &imageM, Mat &featM, const int sbin, const
             if (vb > v) { v = vb; dx = dxb; dy = dyb; }
 
             // snap to one of the 18 orientations
-            float best_dot = 0;
+            /* float best_dot = 0;
             int best_o = 0;
             for (int o = 0; o < (int)numOrient/2; o++)
             {
@@ -298,7 +298,10 @@ void Feature::computeHOG32D(const Mat &imageM, Mat &featM, const int sbin, const
                     best_dot = -dot;
                     best_o = o + (int)(numOrient/2);
                 }
-            }
+            } */
+            int best_o = (int)(roundf(atan2f(dy, dx) * 9.0f / 3.1415926f)); 
+            if (best_o < 0) 
+                best_o = (18 + best_o) % 18; 
 
             // add to 4 historgrams around pixel using bilinear interpolation
             float yp =  ((float)y+0.5)/(float)sbin - 0.5;
