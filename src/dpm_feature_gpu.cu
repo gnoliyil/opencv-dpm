@@ -105,47 +105,38 @@ __global__ void computeHOG32DHist
     float vx1 = 1.0 - vx0;
     v = sqrtf(v);
 
-    __shared__ float addHist0[64][numOrient], addHist1[64][numOrient], 
-                     addHist2[64][numOrient], addHist3[64][numOrient];
+    __shared__ float addHist0[numOrient], addHist1[numOrient], 
+                     addHist2[numOrient], addHist3[numOrient];
 
+    if (pixel_id == 0)
     for (int i = 0; i < numOrient; i++)
     {
-        addHist0[pixel_id][i] = 0; 
-        addHist1[pixel_id][i] = 0; 
-        addHist2[pixel_id][i] = 0; 
-        addHist3[pixel_id][i] = 0; 
-    }
+        addHist0[i] = 0; 
+        addHist1[i] = 0; 
+        addHist2[i] = 0; 
+        addHist3[i] = 0; 
+    } 
 
-    addHist0[pixel_id][best_o] = vy1*vx1*v; 
-    addHist1[pixel_id][best_o] = vx0*vy1*v; 
-    addHist2[pixel_id][best_o] = vy0*vx1*v; 
-    addHist3[pixel_id][best_o] =  vy0*vx0*v;
+    atomicAdd(&addHist0[best_o], vy1*vx1*v); 
+    atomicAdd(&addHist1[best_o], vy1*vx0*v); 
+    atomicAdd(&addHist2[best_o], vy0*vx1*v); 
+    atomicAdd(&addHist3[best_o], vy0*vx0*v); 
     __syncthreads(); 
-
-    if (pixel_id)
-    {
-        atomicAdd(&addHist0[0][best_o], vy1*vx1*v); 
-        atomicAdd(&addHist1[0][best_o], vy1*vx0*v); 
-        atomicAdd(&addHist2[0][best_o], vy0*vx1*v); 
-        atomicAdd(&addHist3[0][best_o], vy0*vx0*v); 
-    }
-    __syncthreads(); 
-
     
     if (pixel_id == 0)
     {
 	for (int i = 0; i < numOrient; i++)
-            atomicAdd(histM.ptr(block_r) + block_c * numOrient + i, addHist0[0][i]);
+            atomicAdd(histM.ptr(block_r) + block_c * numOrient + i, addHist0[i]);
         if (block_c + 1 < bW)
             for (int i = 0; i < numOrient; i++)          
-                atomicAdd(histM.ptr(block_r) + (block_c + 1) * numOrient + i, addHist1[0][i]);
+                atomicAdd(histM.ptr(block_r) + (block_c + 1) * numOrient + i, addHist1[i]);
         if (block_r + 1 < bH)
         {
             for (int i = 0; i < numOrient; i++)
-                atomicAdd(histM.ptr(block_r + 1) + block_c * numOrient + i, addHist2[0][i]);
+                atomicAdd(histM.ptr(block_r + 1) + block_c * numOrient + i, addHist2[i]);
             if (block_c + 1 < bW)
                 for (int i = 0 ; i < numOrient; i++)    
-                    atomicAdd(histM.ptr(block_r + 1) + (block_c + 1) * numOrient + i, addHist3[0][i]); 
+                    atomicAdd(histM.ptr(block_r + 1) + (block_c + 1) * numOrient + i, addHist3[i]); 
         }
     }
     __syncthreads(); 
