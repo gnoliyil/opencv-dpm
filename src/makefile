@@ -6,6 +6,7 @@ endif
 
 ifeq ($(DEBUG),1)
     COMMON_FLAGS += -g
+    NVCCFLAGS += -G
 else
     COMMON_FLAGS += -O3 
 endif
