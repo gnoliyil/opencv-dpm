@@ -74,6 +74,7 @@ void DPMCascade::loadCascadeModel(const string &modelPath)
     paramsG.sbin = model.sBin;
 
     fg.initialize(paramsG); 
+    fg.setPcaCoeff(model.pcaCoeff); 
 
     PyramidParameter paramsC;
     paramsC.padx = model.maxSizeX;
@@ -193,7 +194,9 @@ void DPMCascade::computeFeatures(const Mat &im)
     fg.downloadFeature(pyramid);
 
     // compute projected pyramid
-    feature.projectFeaturePyramid(model.pcaCoeff, pyramid, pcaPyramid);
+    // feature.projectFeaturePyramid(model.pcaCoeff, pyramid, pcaPyramid);
+    fg.projectFeaturePyramid(); 
+    fg.downloadPcaFeature(pcaPyramid); 
 }
 
 void DPMCascade::computeLocationScores(vector< vector< float > >  &locationScores)

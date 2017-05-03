@@ -89,10 +89,13 @@ class FeatureGPU
         gpu::GpuMat origImage;
         Size origSize;
 
+        gpu::GpuMat gpuPcaCoeff; 
+        gpu::PtrStepSzf ptrPcaCoeff; 
         std::vector<gpu::GpuMat> gpuImage; 
         std::vector<gpu::GpuMat> gpuHist; 
         std::vector<gpu::GpuMat> gpuNorm;
         std::vector<gpu::GpuMat> gpuFeat; 
+        std::vector<gpu::GpuMat> gpuPcaFeat;  
         std::vector<float>       scales; 
         std::vector<Size>        scaleSizes; 
 
@@ -110,6 +113,7 @@ class FeatureGPU
         FeatureGPUParams getParams(); 
 
         void setParams(const FeatureGPUParams &p); 
+        void setPcaCoeff(const Mat & coeff); 
 
         // compute all scales, saving it to scales; 
         // use in loadImage() 
@@ -131,7 +135,10 @@ class FeatureGPU
         // calculateHistograms
         void computeHistPyramid();
 
+        void projectFeaturePyramid(); 
+
         // save GPU matrices to host memory. 
+        void downloadPcaFeature(std::vector<Mat> &feature); 
         void downloadFeature(std::vector<Mat> &feature); 
         void downloadHist(std::vector<Mat> &hist); 
         void downloadNorm(std::vector<Mat> &norm); 

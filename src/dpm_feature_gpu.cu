@@ -13,6 +13,7 @@ namespace dpm
 
 static const int numOrient = 18;
 static const int dimHOG = 32;
+static const int dimPCA = 6;
 static __constant__ float eps = 0.0001;
 static __constant__ float uu[9] = {1.000, 0.9397, 0.7660, 0.5000, 0.1736, -0.1736, -0.5000, -0.7660, -0.9397}; 
 static __constant__ float vv[9] = {0.000, 0.3420, 0.6428, 0.8660, 0.9848,  0.9848,  0.8660,  0.6428,  0.3420};
@@ -272,6 +273,13 @@ FeatureGPUParams FeatureGPU::getParams()
     return params;
 }
 
+void FeatureGPU::downloadPcaFeature(std::vector<Mat> &pcaFeature)
+{
+    pcaFeature.resize(gpuPcaFeat.size()); 
+    for (int i = 0; i < gpuPcaFeat.size(); i++)
+        gpuPcaFeat[i].download(pcaFeature[i]);
+}
+
 void FeatureGPU::downloadFeature(std::vector<Mat> &feature)
 {
     feature.resize(gpuFeat.size()); 
@@ -349,6 +357,7 @@ void FeatureGPU::initMats()
     gpuHist.resize(interval + maxScale); 
     gpuNorm.resize(interval + maxScale); 
     gpuFeat.resize(interval + maxScale); 
+    gpuPcaFeat.resize(interval + maxScale); 
 
     for (int i = 0; i < interval + maxScale; i++)
     {
@@ -371,6 +380,7 @@ void FeatureGPU::initMats()
         gpuHist[i] = gpu::GpuMat(Size(bW * numOrient, bH), CV_32F, Scalar(0)); 
         gpuNorm[i] = gpu::GpuMat(Size(bW, bH), CV_32F, Scalar(0)); 
         gpuFeat[i] = gpu::GpuMat(Size(oW * dimHOG, oH), CV_32F, Scalar(0)); 
+        gpuPcaFeat[i] = gpu::GpuMat(Size(oW * dimPCA, oH), CV_32F, Scalar(0)); 
     }
 }
 
@@ -384,6 +394,7 @@ void FeatureGPU::resetMats()
         gpuHist[i].setTo(0);
         gpuNorm[i].setTo(0);
         gpuFeat[i].setTo(0);
+        gpuPcaFeat[i].setTo(0);
     }
 }
 
@@ -456,6 +467,36 @@ void FeatureGPU::computeHistPyramid()
             computeHOG32D(i, params.sbin, params.pad_x + 1, params.pad_y + 1); 
 }
 
+void FeatureGPU::setPcaCoeff(const Mat & coeff)
+{
+    gpuPcaCoeff.upload(coeff.t()); 
+    ptrPcaCoeff = (gpu::PtrStepSzf) gpuPcaCoeff; 
+}
+
+__global__ void projectFeatureImage( const gpu::PtrStepSzf pcaCoeff, const gpu::PtrStepSzf feature, gpu::PtrStepSzf pcaFeature) 
+{
+    int y = blockIdx.x; 
+    int x = blockIdx.y; 
+
+    int currentDim = threadIdx.x; 
+
+    const float * orig = feature.ptr(y) + x * dimHOG; 
+    const float * coeff = pcaCoeff.ptr(currentDim); 
+    float * proj = pcaFeature.ptr(y) + x * dimPCA + currentDim; 
+    for (int i = 0; i < dimHOG; i++)
+        *proj += * (orig + i) * * (coeff + i); 
+}
+
+void FeatureGPU::projectFeaturePyramid() 
+{
+    int interval = params.interval;
+    int maxScale = params.maxScale; 
+    for (int i = 0; i < interval + maxScale; i++)
+    {
+        dim3 grid(gpuFeat[i].rows, gpuFeat[i].cols / dimHOG); 
+        projectFeatureImage <<< grid, dimPCA >>> (ptrPcaCoeff, gpuFeat[i], gpuPcaFeat[i]); 
+    }
+}
 
 }
  
