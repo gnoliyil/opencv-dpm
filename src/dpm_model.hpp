@@ -124,6 +124,10 @@ class CascadeModel : public Model
         int pcaDim;
         // component indexed arrays of pruning threshold
         std::vector< std::vector< float > >  prunThreshold;
+        // semi negative threshold
+        std::vector< std::vector< float > >  semiNegThreshold;
+        // semi positive threshold
+        std::vector< std::vector< float > >  semiPosThreshold;
         // root pca filters
         std::vector< Mat > rootPCAFilters;
         // part PCA filters

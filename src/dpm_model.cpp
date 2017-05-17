@@ -110,6 +110,16 @@ bool CascadeModel::serialize(const std::string &filename) const
         fs << prunThreshold[i];
     fs << "]";
 
+    fs << "SemiNegThreshold" << "[";
+    for (unsigned int i = 0; i < semiNegThreshold.size(); i++)
+        fs << semiNegThreshold[i];
+    fs << "]";
+
+    fs << "SemiPosThreshold" << "[";
+    for (unsigned int i = 0; i < semiPosThreshold.size(); i++)
+        fs << semiPosThreshold[i];
+    fs << "]";
+
     // write anchor points
     fs << "Anchor" << "[";
     for (unsigned int i = 0; i < anchors.size(); i++)
@@ -169,6 +179,18 @@ bool CascadeModel::deserialize(const std::string &filename)
     prunThreshold.resize(nodePrun.size());
     for (unsigned int i = 0; i < prunThreshold.size(); i++)
         nodePrun[i] >> prunThreshold[i];
+
+    // read pruning threshold
+	FileNode nodeSemiNeg = fs["SemiNegThreshold"];
+	semiNegThreshold.resize(nodeSemiNeg.size());
+	for (unsigned int i = 0; i < semiNegThreshold.size(); i++)
+		nodeSemiNeg[i] >> semiNegThreshold[i];
+
+	// read pruning threshold
+	FileNode nodeSemiPos = fs["SemiPosThreshold"];
+	semiPosThreshold.resize(nodeSemiPos.size());
+	for (unsigned int i = 0; i < semiPosThreshold.size(); i++)
+		nodeSemiPos[i] >> semiPosThreshold[i];
 
     // read anchor points
     FileNode nodeAnchor = fs["Anchor"];

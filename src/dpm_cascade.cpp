@@ -320,6 +320,17 @@ void DPMCascade::process( vector< vector<float> > &dets)
 	vector< vector< Mat > > rootPCAScores;
 	computeRootPCAScores(rootPCAScores);
 
+	// keep track of the PCA scores for each PCA filter
+	Size pcaSize = rootPCAScores[0][interval].size();
+	cout << pcaSize << endl;
+	vector< vector< vector< float > > > pcaScore(pcaSize.height * pcaSize.width);
+	for (int i = 0; i < pcaScore.size(); i++)
+	{
+		pcaScore[i].resize(model.numComponents);
+		for (int comp = 0; comp < model.numComponents; comp++)
+			pcaScore[i][comp].resize(model.numParts[comp]+1);
+	}
+
 	// process each model component and pyramid level
 	for (int comp = 0; comp < model.numComponents; comp++)
 	{
@@ -332,15 +343,6 @@ void DPMCascade::process( vector< vector<float> > &dets)
 
 			// get the scores of the first PCA filter
 			Mat rtscore = rootPCAScores[comp][rlevel];
-
-			// keep track of the PCA scores for each PCA filter
-			vector< vector< vector< float > > > pcaScore(rtscore.cols * rtscore.rows);
-			for (int i = 0; i < pcaScore.size(); i++)
-			{
-				pcaScore[i].resize(model.numComponents);
-				for (int comp = 0; comp < model.numComponents; comp++)
-					pcaScore[i][comp].resize(model.numParts[comp]+1);
-			}
 
 			/* vector<Mat> stageScore;
 			for (int i = 0; i < numstages; i++)
@@ -375,6 +377,7 @@ void DPMCascade::process( vector< vector<float> > &dets)
 								continue;
 
 							float score = currScore.at<float>(ry, rx);
+							// cout << score << endl;
 							float t = model.prunThreshold[comp][2*stage-1];
 							// check for hypothesis pruning
 
@@ -382,13 +385,29 @@ void DPMCascade::process( vector< vector<float> > &dets)
 							// TODO: add semiNegativeThreshold for semi-negative pruning
 							// semi-negative pruning
 							// float semi_negative_thres = model.semiNegativeThreshold[comp][2 * stage - 1];
-							if (score < t - 0.6)
+							float semi_neg = model.semiNegThreshold[comp][stage];
+							if (score < semi_neg)
 							{
 								mask.at<uchar>(ry, rx) = 0;
 								for (int k = 0; k < NUM_DIRECTION; k++)
 									mask.at<uchar>(ry + dy[k], rx + dx[k]) = 0;
 								continue;
 							}
+
+							float semi_pos = model.semiPosThreshold[comp][stage];
+							bool has_large = false;
+							for (int ky = -6; ky < 7; ky ++ )
+							{
+								for (int kx = -6; kx < 7; kx++)
+									if (currScore.at<float>(ry + ky, rx + kx) - score >= semi_pos)
+									{
+										has_large = true;
+										break;
+									}
+								if (has_large) break;
+							}
+							if (has_large)
+								mask.at<uchar>(ry, rx) = 0;
 
 							if (score < t)
 							{
